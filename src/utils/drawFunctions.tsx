@@ -1,11 +1,13 @@
-import type { Ellipse, Rectangle } from "../App";
+import type { Circle, Ellipse, Rectangle } from "../App";
 
 export const drawRectangle = (
   props: Rectangle,
   ctx: React.RefObject<CanvasRenderingContext2D | null>,
 ) => {
   if (!ctx.current) return;
-  ctx.current.strokeRect(props.x, props.y, props.width, props.height);
+  ctx.current.beginPath();
+  ctx.current.roundRect(props.x, props.y, props.width, props.height, 20);
+  ctx.current.stroke();
 };
 
 export const drawEllipse = (
@@ -20,6 +22,22 @@ export const drawEllipse = (
     props.radiusX,
     props.radiusY,
     props.rotation,
+    props.startAngle,
+    props.endAngle,
+  );
+  ctx.current.stroke();
+};
+
+export const drawCircle = (
+  props: Circle,
+  ctx: React.RefObject<CanvasRenderingContext2D | null>,
+) => {
+  if (!ctx.current) return;
+  ctx.current.beginPath();
+  ctx.current.arc(
+    props.x,
+    props.y,
+    props.radius,
     props.startAngle,
     props.endAngle,
   );

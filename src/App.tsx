@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { drawEllipse, drawRectangle } from "./utils/drawFunctions";
+import { drawCircle, drawEllipse, drawRectangle } from "./utils/drawFunctions";
 
-type Shape = Rectangle | Ellipse;
+type Shape = Rectangle | Ellipse | Circle;
 
 export type Rectangle = {
   type: "Rectangle";
@@ -9,6 +9,16 @@ export type Rectangle = {
   y: number;
   width: number;
   height: number;
+  radius: number;
+};
+
+export type Circle = {
+  type: "Circle";
+  x: number;
+  y: number;
+  radius: number;
+  startAngle: number;
+  endAngle: number;
 };
 
 export type Ellipse = {
@@ -32,15 +42,18 @@ function App() {
   const startY = useRef(0);
 
   const isDrawing = useRef(false);
-  const isShape = useRef<"Rectangle" | "Ellipse">("Rectangle");
+  const isShape = useRef<"Rectangle" | "Ellipse" | "Circle">("Rectangle");
 
   const [shapes, setShapes] = useState<Shapes>([]);
+  const [redo, setRedo] = useState<Shapes>([]);
   function DrawShapes(ctx: React.RefObject<CanvasRenderingContext2D | null>) {
     shapes.forEach((s) => {
       if (s.type === "Rectangle") {
         drawRectangle(s, ctx);
       } else if (s.type === "Ellipse") {
         drawEllipse(s, ctx);
+      } else if (s.type === "Circle") {
+        drawCircle(s, ctx);
       }
     });
   }
@@ -72,12 +85,15 @@ function App() {
       const width = e.offsetX - startX.current;
       const height = e.offsetY - startY.current;
 
-      contextRef.current?.strokeRect(
+      contextRef.current.beginPath();
+      contextRef.current?.roundRect(
         startX.current,
         startY.current,
         width,
         height,
+        20,
       );
+      contextRef.current.stroke();
     } else if (isShape.current === "Ellipse") {
       const radiusX = Math.abs(e.offsetX - startX.current) / 2;
       const radiusY = Math.abs(e.offsetY - startY.current) / 2;
@@ -89,6 +105,22 @@ function App() {
         radiusX,
         radiusY,
         0,
+        0,
+        Math.PI * 2,
+      );
+      contextRef.current.stroke();
+    } else if (isShape.current === "Circle") {
+      const { offsetX, offsetY } = e;
+      const dx = offsetX - startX.current;
+      const dy = offsetY - startY.current;
+
+      const radius = Math.sqrt(dx * dx + dy * dy);
+
+      contextRef.current.beginPath();
+      contextRef.current.arc(
+        startX.current,
+        startY.current,
+        radius,
         0,
         Math.PI * 2,
       );
@@ -114,6 +146,7 @@ function App() {
         y: startY.current,
         width,
         height,
+        radius: 20,
       };
     } else if (isShape.current === "Ellipse") {
       const radiusX = Math.abs(e.offsetX - startX.current) / 2;
@@ -128,8 +161,24 @@ function App() {
         startAngle: 0,
         endAngle: Math.PI * 2,
       };
+    } else if (isShape.current === "Circle") {
+      const { offsetX, offsetY } = e;
+      const dx = offsetX - startX.current;
+      const dy = offsetY - startY.current;
+
+      const radius = Math.sqrt(dx * dx + dy * dy);
+
+      newShape = {
+        type: "Circle",
+        x: startX.current,
+        y: startY.current,
+        radius,
+        startAngle: 0,
+        endAngle: Math.PI * 2,
+      };
     }
     setShapes((prev) => [...prev, newShape]);
+    setRedo([]);
   };
 
   useEffect(() => {
@@ -145,6 +194,12 @@ function App() {
 
     ctx.strokeStyle = "white";
 
+    contextRef.current.clearRect(
+      0,
+      0,
+      canvasRef.current.width,
+      canvasRef.current.height,
+    );
     DrawShapes(contextRef);
 
     return () => {
@@ -172,6 +227,36 @@ function App() {
           className="bg-gray-500 text-white"
         >
           Ellipse
+        </button>
+        <button
+          onClick={() => {
+            isShape.current = "Circle";
+          }}
+          className="bg-gray-500 text-white"
+        >
+          Circle
+        </button>
+        <button
+          disabled={shapes.length === 0}
+          onClick={() => {
+            const oldShape: Shape = shapes[shapes.length - 1];
+            setShapes((prev) => prev.slice(0, -1));
+            setRedo((prev) => [...prev, oldShape]);
+          }}
+          className="bg-gray-500 text-white"
+        >
+          Undo
+        </button>
+        <button
+          disabled={redo.length === 0}
+          onClick={() => {
+            const oldShape: Shape = redo[redo.length - 1];
+            setShapes((prev) => [...prev, oldShape]);
+            setRedo((prev) => prev.slice(0, -1));
+          }}
+          className="bg-gray-500 text-white"
+        >
+          Redo
         </button>
       </div>
       <canvas
