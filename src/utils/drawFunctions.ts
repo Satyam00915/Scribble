@@ -1,4 +1,4 @@
-import type { Circle, Ellipse, Rectangle } from "../App";
+import type { Circle, Ellipse, Rectangle } from "./types.ts";
 
 export const drawRectangle = (
   props: Rectangle,

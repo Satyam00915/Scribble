@@ -1,38 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { drawCircle, drawEllipse, drawRectangle } from "./utils/drawFunctions";
-
-type Shape = Rectangle | Ellipse | Circle;
-
-export type Rectangle = {
-  type: "Rectangle";
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  radius: number;
-};
-
-export type Circle = {
-  type: "Circle";
-  x: number;
-  y: number;
-  radius: number;
-  startAngle: number;
-  endAngle: number;
-};
-
-export type Ellipse = {
-  type: "Ellipse";
-  x: number;
-  y: number;
-  radiusX: number;
-  radiusY: number;
-  rotation: number;
-  startAngle: number;
-  endAngle: number;
-};
-
-type Shapes = Shape[];
+import {
+  checkInsideCircle,
+  checkInsideEllipse,
+  checkInsideRectangle,
+  drawSelectBorder,
+} from "./utils/helper";
+import type { Shape, Shapes } from "./utils/types";
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -44,10 +18,17 @@ function App() {
   const isDrawing = useRef(false);
   const isShape = useRef<"Rectangle" | "Ellipse" | "Circle">("Rectangle");
 
+  const [isSelect, setSelect] = useState(false);
+  const isShapeSelect = useRef<boolean>(false);
+  const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
+
   const [shapes, setShapes] = useState<Shapes>([]);
   const [redo, setRedo] = useState<Shapes>([]);
+
+  console.log(shapes);
   function DrawShapes(ctx: React.RefObject<CanvasRenderingContext2D | null>) {
     shapes.forEach((s) => {
+      if (!ctx.current) return;
       if (s.type === "Rectangle") {
         drawRectangle(s, ctx);
       } else if (s.type === "Ellipse") {
@@ -55,11 +36,38 @@ function App() {
       } else if (s.type === "Circle") {
         drawCircle(s, ctx);
       }
+
+      if (s.id === selectedShapeId && isShapeSelect.current) {
+        drawSelectBorder(ctx.current, s);
+      }
     });
   }
 
   const handlePointerDown = (e: PointerEvent) => {
     const { offsetX: x, offsetY: y } = e;
+    if (isShapeSelect.current) {
+      for (let i = shapes.length - 1; i >= 0; i--) {
+        const s: Shape = shapes[i];
+        if (s.type === "Rectangle") {
+          if (checkInsideRectangle(x, y, s)) {
+            setSelectedShapeId(s.id);
+            return;
+          }
+        } else if (s.type === "Circle") {
+          if (checkInsideCircle(x, y, s)) {
+            setSelectedShapeId(s.id);
+            return;
+          }
+        } else if (s.type === "Ellipse") {
+          if (checkInsideEllipse(x, y, s)) {
+            setSelectedShapeId(s.id);
+            return;
+          }
+        }
+      }
+      setSelectedShapeId(null);
+      return;
+    }
 
     startX.current = x;
     startY.current = y;
@@ -68,6 +76,7 @@ function App() {
   };
 
   const handlePointerMove = (e: PointerEvent) => {
+    if (isShapeSelect.current) return;
     if (!isDrawing.current) return;
     if (!canvasRef.current) return;
     if (!contextRef.current) return;
@@ -129,6 +138,7 @@ function App() {
   };
 
   const handlePointerUp = (e: PointerEvent) => {
+    if (isShapeSelect.current) return;
     isDrawing.current = false;
 
     const currentX = e.offsetX;
@@ -141,6 +151,7 @@ function App() {
 
     if (isShape.current === "Rectangle") {
       newShape = {
+        id: Date.now().toString(),
         type: "Rectangle",
         x: startX.current,
         y: startY.current,
@@ -152,6 +163,7 @@ function App() {
       const radiusX = Math.abs(e.offsetX - startX.current) / 2;
       const radiusY = Math.abs(e.offsetY - startY.current) / 2;
       newShape = {
+        id: Date.now().toString(),
         type: "Ellipse",
         x: Math.min(startX.current + radiusX, e.offsetX + radiusX),
         y: Math.min(startY.current + radiusY, e.offsetY + radiusY),
@@ -169,6 +181,7 @@ function App() {
       const radius = Math.sqrt(dx * dx + dy * dy);
 
       newShape = {
+        id: Date.now().toString(),
         type: "Circle",
         x: startX.current,
         y: startY.current,
@@ -207,7 +220,7 @@ function App() {
       canvasRef.current?.removeEventListener("pointermove", handlePointerMove);
       canvasRef.current?.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [shapes]);
+  }, [shapes, selectedShapeId]);
 
   return (
     <div className="relative">
@@ -215,6 +228,8 @@ function App() {
         <button
           onClick={() => {
             isShape.current = "Rectangle";
+            setSelect(false);
+            isShapeSelect.current = false;
           }}
           className="bg-gray-500 text-white"
         >
@@ -223,6 +238,8 @@ function App() {
         <button
           onClick={() => {
             isShape.current = "Ellipse";
+            setSelect(false);
+            isShapeSelect.current = false;
           }}
           className="bg-gray-500 text-white"
         >
@@ -231,6 +248,8 @@ function App() {
         <button
           onClick={() => {
             isShape.current = "Circle";
+            setSelect(false);
+            isShapeSelect.current = false;
           }}
           className="bg-gray-500 text-white"
         >
@@ -239,6 +258,7 @@ function App() {
         <button
           disabled={shapes.length === 0}
           onClick={() => {
+            setSelectedShapeId(null);
             const oldShape: Shape = shapes[shapes.length - 1];
             setShapes((prev) => prev.slice(0, -1));
             setRedo((prev) => [...prev, oldShape]);
@@ -257,6 +277,15 @@ function App() {
           className="bg-gray-500 text-white"
         >
           Redo
+        </button>
+        <button
+          onClick={() => {
+            setSelect(true);
+            isShapeSelect.current = true;
+          }}
+          className={`${isSelect ? "bg-green-500" : "bg-gray-500"} text-white`}
+        >
+          Select
         </button>
       </div>
       <canvas
