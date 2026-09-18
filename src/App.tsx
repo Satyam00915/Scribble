@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   drawCircle,
   drawEllipse,
   drawLine,
   drawRectangle,
+  drawRough,
 } from "./utils/drawFunctions";
 import {
   checkInsideCircle,
@@ -13,10 +14,13 @@ import {
   drawSelectBorder,
 } from "./utils/helper";
 import type { Shape, Shapes } from "./utils/types";
+import rough from "roughjs";
+import type { RoughCanvas } from "roughjs/bin/canvas";
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const contextRef = useRef<CanvasRenderingContext2D>(null);
+  const roughRef = useRef<RoughCanvas>(null);
 
   const startX = useRef(0);
   const startY = useRef(0);
@@ -27,9 +31,9 @@ function App() {
   const isDragging = useRef(false);
 
   const isDrawing = useRef(false);
-  const isShape = useRef<"Rectangle" | "Ellipse" | "Circle" | "Line">(
-    "Rectangle",
-  );
+  const isShape = useRef<
+    "Rectangle" | "Ellipse" | "Circle" | "Line" | "Pencil"
+  >("Rectangle");
 
   const [isSelect, setSelect] = useState(false);
   const isShapeSelect = useRef<boolean>(false);
@@ -38,18 +42,26 @@ function App() {
   const [shapes, setShapes] = useState<Shapes>([]);
   const [redo, setRedo] = useState<Shapes>([]);
 
+  const currentPath = useRef<[x: number, y: number][]>([]);
+
   console.log(shapes);
-  function DrawShapes(ctx: React.RefObject<CanvasRenderingContext2D | null>) {
+  function DrawShapes(
+    ctx: React.RefObject<CanvasRenderingContext2D | null>,
+    roughRef: React.RefObject<RoughCanvas | null>,
+  ) {
     shapes.forEach((s) => {
+      if (!roughRef.current) return;
       if (!ctx.current) return;
       if (s.type === "Rectangle") {
-        drawRectangle(s, ctx);
+        drawRectangle(s, roughRef.current);
       } else if (s.type === "Ellipse") {
-        drawEllipse(s, ctx);
+        drawEllipse(s, roughRef.current);
       } else if (s.type === "Circle") {
-        drawCircle(s, ctx);
+        drawCircle(s, roughRef.current);
       } else if (s.type === "Line") {
-        drawLine(s, ctx);
+        drawLine(s, roughRef.current);
+      } else if (s.type === "Pencil") {
+        drawRough(s, roughRef.current);
       }
 
       if (s.id === selectedShapeId && isShapeSelect.current) {
@@ -105,6 +117,9 @@ function App() {
     startX.current = x;
     startY.current = y;
 
+    currentPath.current = [];
+    currentPath.current.push([x, y]);
+
     isDrawing.current = true;
   };
 
@@ -125,6 +140,8 @@ function App() {
                 endX: s.endX + deltaX,
                 endY: s.endY + deltaY,
               };
+            } else if (s.type === "Pencil") {
+              return s;
             } else {
               return { ...s, x: s.x + deltaX, y: s.y + deltaY };
             }
@@ -142,6 +159,7 @@ function App() {
     if (!isDrawing.current) return;
     if (!canvasRef.current) return;
     if (!contextRef.current) return;
+    if (!roughRef.current) return;
 
     contextRef.current.clearRect(
       0,
@@ -150,36 +168,35 @@ function App() {
       canvasRef.current.height,
     );
 
-    DrawShapes(contextRef);
+    DrawShapes(contextRef, roughRef);
 
     if (isShape.current === "Rectangle") {
       const width = e.offsetX - startX.current;
       const height = e.offsetY - startY.current;
 
-      contextRef.current.beginPath();
-      contextRef.current?.roundRect(
+      roughRef.current?.rectangle(
         startX.current,
         startY.current,
         width,
         height,
-        20,
+        {
+          stroke: "white",
+          roughness: 3.5,
+        },
       );
-      contextRef.current.stroke();
     } else if (isShape.current === "Ellipse") {
       const radiusX = Math.abs(e.offsetX - startX.current) / 2;
       const radiusY = Math.abs(e.offsetY - startY.current) / 2;
 
-      contextRef.current.beginPath();
-      contextRef.current.ellipse(
+      roughRef.current.ellipse(
         Math.min(startX.current + radiusX, e.offsetX + radiusX),
         Math.min(startY.current + radiusY, e.offsetY + radiusY),
-        radiusX,
-        radiusY,
-        0,
-        0,
-        Math.PI * 2,
+        2 * radiusX,
+        2 * radiusY,
+        {
+          stroke: "white",
+        },
       );
-      contextRef.current.stroke();
     } else if (isShape.current === "Circle") {
       const { offsetX, offsetY } = e;
       const dx = offsetX - startX.current;
@@ -187,22 +204,24 @@ function App() {
 
       const radius = Math.sqrt(dx * dx + dy * dy);
 
-      contextRef.current.beginPath();
-      contextRef.current.arc(
-        startX.current,
-        startY.current,
-        radius,
-        0,
-        Math.PI * 2,
-      );
-      contextRef.current.stroke();
+      roughRef.current.circle(startX.current, startY.current, 2 * radius, {
+        stroke: "white",
+        roughness: 1.5,
+      });
     } else if (isShape.current === "Line") {
       const { offsetX, offsetY } = e;
 
-      contextRef.current.beginPath();
-      contextRef.current.moveTo(startX.current, startY.current);
-      contextRef.current.lineTo(offsetX, offsetY);
-      contextRef.current.stroke();
+      roughRef.current.line(startX.current, startY.current, offsetX, offsetY, {
+        stroke: "white",
+        roughness: 2,
+      });
+    } else if (isShape.current === "Pencil") {
+      const { offsetX: x, offsetY: y } = e;
+      currentPath.current.push([x, y]);
+      roughRef.current.linearPath(currentPath.current, {
+        stroke: "white",
+        strokeWidth: 2,
+      });
     }
   };
 
@@ -272,6 +291,12 @@ function App() {
         endX: offsetX,
         endY: offsetY,
       };
+    } else if (isShape.current === "Pencil") {
+      newShape = {
+        id: Date.now().toString(),
+        type: "Pencil",
+        points: currentPath.current,
+      };
     }
     setShapes((prev) => [...prev, newShape]);
     setRedo([]);
@@ -280,9 +305,13 @@ function App() {
   useEffect(() => {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
+    const rc = rough.canvas(canvasRef.current);
     if (!ctx) return;
 
+    const canvas = canvasRef.current;
+
     contextRef.current = ctx;
+    roughRef.current = rc;
 
     canvasRef.current.addEventListener("pointerdown", handlePointerDown);
     canvasRef.current.addEventListener("pointermove", handlePointerMove);
@@ -296,12 +325,14 @@ function App() {
       canvasRef.current.width,
       canvasRef.current.height,
     );
-    DrawShapes(contextRef);
+    DrawShapes(contextRef, roughRef);
 
     return () => {
-      canvasRef.current?.removeEventListener("pointerdown", handlePointerDown);
-      canvasRef.current?.removeEventListener("pointermove", handlePointerMove);
-      canvasRef.current?.removeEventListener("pointerup", handlePointerUp);
+      if (canvas) {
+        canvas.removeEventListener("pointerdown", handlePointerDown);
+        canvas.removeEventListener("pointermove", handlePointerMove);
+        canvas.removeEventListener("pointerup", handlePointerUp);
+      }
     };
   }, [shapes, selectedShapeId]);
 
@@ -347,6 +378,16 @@ function App() {
           className="bg-gray-500 text-white"
         >
           Line
+        </button>
+        <button
+          onClick={() => {
+            isShape.current = "Pencil";
+            setSelect(false);
+            isShapeSelect.current = false;
+          }}
+          className="bg-gray-500 text-white"
+        >
+          Pencil
         </button>
         <button
           disabled={shapes.length === 0}
