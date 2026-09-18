@@ -45,6 +45,9 @@ function App() {
     text: string;
   } | null>(null);
 
+  const [activeTool, setActiveTool] = useState<
+    "Select" | "Rectangle" | "Ellipse" | "Circle" | "Line" | "Pencil" | "Text" | "Eraser"
+  >("Rectangle");
   const [isSelect, setSelect] = useState(false);
   const isShapeSelect = useRef<boolean>(false);
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
@@ -452,118 +455,247 @@ function App() {
 
   return (
     <div className="relative">
-      <div className="absolute flex justify-center items-center w-full gap-10">
-        <button
-          onClick={() => {
-            isShape.current = "Rectangle";
-            setSelect(false);
-            isShapeSelect.current = false;
-            setWriting(null);
-          }}
-          className="bg-gray-500 text-white"
-        >
-          Rectangle
-        </button>
-        <button
-          onClick={() => {
-            isShape.current = "Ellipse";
-            setSelect(false);
-            setWriting(null);
-            isShapeSelect.current = false;
-          }}
-          className="bg-gray-500 text-white"
-        >
-          Ellipse
-        </button>
-        <button
-          onClick={() => {
-            isShape.current = "Circle";
-            setSelect(false);
-            setWriting(null);
-            isShapeSelect.current = false;
-          }}
-          className="bg-gray-500 text-white"
-        >
-          Circle
-        </button>
-        <button
-          onClick={() => {
-            isShape.current = "Line";
-            setSelect(false);
-            setWriting(null);
-            isShapeSelect.current = false;
-          }}
-          className="bg-gray-500 text-white"
-        >
-          Line
-        </button>
-        <button
-          onClick={() => {
-            isShape.current = "Pencil";
-            setSelect(false);
-            setWriting(null);
-            isShapeSelect.current = false;
-          }}
-          className="bg-gray-500 text-white"
-        >
-          Pencil
-        </button>
-        <button
-          onClick={() => {
-            isShape.current = "Text";
-            setSelect(false);
-            isShapeSelect.current = false;
-          }}
-          className="bg-gray-500 text-white"
-        >
-          Text
-        </button>
-        <button
-          disabled={shapes.length === 0}
-          onClick={() => {
-            setSelectedShapeId(null);
-            const oldShape: Shape = shapes[shapes.length - 1];
-            setShapes((prev) => prev.slice(0, -1));
-            setWriting(null);
-            setRedo((prev) => [...prev, oldShape]);
-          }}
-          className="bg-gray-500 text-white"
-        >
-          Undo
-        </button>
-        <button
-          disabled={redo.length === 0}
-          onClick={() => {
-            const oldShape: Shape = redo[redo.length - 1];
-            setShapes((prev) => [...prev, oldShape]);
-            setWriting(null);
-            setRedo((prev) => prev.slice(0, -1));
-          }}
-          className="bg-gray-500 text-white"
-        >
-          Redo
-        </button>
-        <button
-          onClick={() => {
-            setSelect(true);
-            isShapeSelect.current = true;
-            setWriting(null);
-          }}
-          className={`${isSelect ? "bg-green-500" : "bg-gray-500"} text-white`}
-        >
-          Select
-        </button>
-        <button
-          onClick={() => {
-            isShape.current = "Eraser";
-            setSelect(false);
-            isShapeSelect.current = false;
-          }}
-          className="bg-gray-500 text-white"
-        >
-          Eraser
-        </button>
-      </div>
+      {/* Real Excalidraw Floating Island Toolbar */}
+      <nav
+        aria-label="Canvas Toolbar"
+        className="fixed top-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 p-1.5 bg-[#121212]/90 backdrop-blur-xl border border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.45)] rounded-2xl select-none"
+      >
+        {/* Undo / Redo Section */}
+        <div className="flex items-center gap-1 pr-1.5 border-r border-white/10">
+          <button
+            type="button"
+            disabled={shapes.length === 0}
+            onClick={() => {
+              setSelectedShapeId(null);
+              const oldShape: Shape = shapes[shapes.length - 1];
+              setShapes((prev) => prev.slice(0, -1));
+              setWriting(null);
+              setRedo((prev) => [...prev, oldShape]);
+            }}
+            title="Undo (Ctrl+Z)"
+            className={`w-9 h-9 rounded-xl transition-all duration-150 flex items-center justify-center relative group ${
+              shapes.length > 0
+                ? "text-zinc-300 hover:text-white hover:bg-white/10 active:scale-95 cursor-pointer"
+                : "text-zinc-600 cursor-not-allowed"
+            }`}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 7v6h6" />
+              <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            disabled={redo.length === 0}
+            onClick={() => {
+              const oldShape: Shape = redo[redo.length - 1];
+              setShapes((prev) => [...prev, oldShape]);
+              setWriting(null);
+              setRedo((prev) => prev.slice(0, -1));
+            }}
+            title="Redo (Ctrl+Y)"
+            className={`w-9 h-9 rounded-xl transition-all duration-150 flex items-center justify-center relative group ${
+              redo.length > 0
+                ? "text-zinc-300 hover:text-white hover:bg-white/10 active:scale-95 cursor-pointer"
+                : "text-zinc-600 cursor-not-allowed"
+            }`}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 7v6h-6" />
+              <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Tools Section */}
+        <div className="flex items-center gap-1">
+          {/* Select Tool */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTool("Select");
+              setSelect(true);
+              isShapeSelect.current = true;
+              setWriting(null);
+            }}
+            title="Selection (1)"
+            className={`w-10 h-10 rounded-xl transition-all duration-150 flex items-center justify-center relative group cursor-pointer active:scale-95 ${
+              activeTool === "Select"
+                ? "bg-[#6965db] text-white shadow-lg shadow-[#6965db]/40"
+                : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
+            }`}
+          >
+            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 3l7 18 3-7 7-3L3 3z" />
+            </svg>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">1</span>
+          </button>
+
+          {/* Rectangle */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTool("Rectangle");
+              isShape.current = "Rectangle";
+              setSelect(false);
+              isShapeSelect.current = false;
+              setWriting(null);
+            }}
+            title="Rectangle (2)"
+            className={`w-10 h-10 rounded-xl transition-all duration-150 flex items-center justify-center relative group cursor-pointer active:scale-95 ${
+              activeTool === "Rectangle"
+                ? "bg-[#6965db] text-white shadow-lg shadow-[#6965db]/40"
+                : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
+            }`}
+          >
+            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="3" />
+            </svg>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">2</span>
+          </button>
+
+          {/* Circle */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTool("Circle");
+              isShape.current = "Circle";
+              setSelect(false);
+              setWriting(null);
+              isShapeSelect.current = false;
+            }}
+            title="Circle (3)"
+            className={`w-10 h-10 rounded-xl transition-all duration-150 flex items-center justify-center relative group cursor-pointer active:scale-95 ${
+              activeTool === "Circle"
+                ? "bg-[#6965db] text-white shadow-lg shadow-[#6965db]/40"
+                : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
+            }`}
+          >
+            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" />
+            </svg>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">3</span>
+          </button>
+
+          {/* Ellipse */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTool("Ellipse");
+              isShape.current = "Ellipse";
+              setSelect(false);
+              setWriting(null);
+              isShapeSelect.current = false;
+            }}
+            title="Ellipse (4)"
+            className={`w-10 h-10 rounded-xl transition-all duration-150 flex items-center justify-center relative group cursor-pointer active:scale-95 ${
+              activeTool === "Ellipse"
+                ? "bg-[#6965db] text-white shadow-lg shadow-[#6965db]/40"
+                : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
+            }`}
+          >
+            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <ellipse cx="12" cy="12" rx="10" ry="6" />
+            </svg>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">4</span>
+          </button>
+
+          {/* Line */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTool("Line");
+              isShape.current = "Line";
+              setSelect(false);
+              setWriting(null);
+              isShapeSelect.current = false;
+            }}
+            title="Line (5)"
+            className={`w-10 h-10 rounded-xl transition-all duration-150 flex items-center justify-center relative group cursor-pointer active:scale-95 ${
+              activeTool === "Line"
+                ? "bg-[#6965db] text-white shadow-lg shadow-[#6965db]/40"
+                : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
+            }`}
+          >
+            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="19" x2="19" y2="5" />
+            </svg>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">5</span>
+          </button>
+
+          {/* Pencil */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTool("Pencil");
+              isShape.current = "Pencil";
+              setSelect(false);
+              setWriting(null);
+              isShapeSelect.current = false;
+            }}
+            title="Pencil / Draw (6)"
+            className={`w-10 h-10 rounded-xl transition-all duration-150 flex items-center justify-center relative group cursor-pointer active:scale-95 ${
+              activeTool === "Pencil"
+                ? "bg-[#6965db] text-white shadow-lg shadow-[#6965db]/40"
+                : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
+            }`}
+          >
+            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+            </svg>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">6</span>
+          </button>
+
+          {/* Text */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTool("Text");
+              isShape.current = "Text";
+              setSelect(false);
+              isShapeSelect.current = false;
+            }}
+            title="Text (7)"
+            className={`w-10 h-10 rounded-xl transition-all duration-150 flex items-center justify-center relative group cursor-pointer active:scale-95 ${
+              activeTool === "Text"
+                ? "bg-[#6965db] text-white shadow-lg shadow-[#6965db]/40"
+                : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
+            }`}
+          >
+            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="4 7 4 4 20 4 20 7" />
+              <line x1="9" y1="20" x2="15" y2="20" />
+              <line x1="12" y1="4" x2="12" y2="20" />
+            </svg>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">7</span>
+          </button>
+
+          {/* Eraser */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTool("Eraser");
+              isShape.current = "Eraser";
+              setSelect(false);
+              isShapeSelect.current = false;
+            }}
+            title="Eraser (0)"
+            className={`w-10 h-10 rounded-xl transition-all duration-150 flex items-center justify-center relative group cursor-pointer active:scale-95 ${
+              activeTool === "Eraser"
+                ? "bg-[#6965db] text-white shadow-lg shadow-[#6965db]/40"
+                : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
+            }`}
+          >
+            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21" />
+              <path d="M22 21H7" />
+              <path d="m5 11 9 9" />
+            </svg>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">0</span>
+          </button>
+        </div>
+      </nav>
       <canvas
         ref={canvasRef}
         width={window.innerWidth}
