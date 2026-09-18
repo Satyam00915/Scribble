@@ -12,6 +12,7 @@ import {
   checkInsideEllipse,
   checkInsideRectangle,
   checkNearLine,
+  checkNearPencil,
   checkNearText,
   drawSelectBorder,
 } from "./utils/helper";
@@ -35,7 +36,7 @@ function App() {
 
   const isDrawing = useRef(false);
   const isShape = useRef<
-    "Rectangle" | "Ellipse" | "Circle" | "Line" | "Pencil" | "Text"
+    "Rectangle" | "Ellipse" | "Circle" | "Line" | "Pencil" | "Text" | "Eraser"
   >("Rectangle");
 
   const [writing, setWriting] = useState<{
@@ -100,8 +101,32 @@ function App() {
     });
   }
 
+  const eraseAt = (x: number, y: number) => {
+    for (let i = shapes.length - 1; i >= 0; i--) {
+      const s = shapes[i];
+      let hit = false;
+
+      if (s.type === "Rectangle" && checkInsideRectangle(x, y, s)) hit = true;
+      else if (s.type === "Circle" && checkInsideCircle(x, y, s)) hit = true;
+      else if (s.type === "Ellipse" && checkInsideEllipse(x, y, s)) hit = true;
+      else if (s.type === "Line" && checkNearLine(x, y, s)) hit = true;
+      else if (
+        s.type === "Text" &&
+        contextRef.current &&
+        checkNearText(x, y, s, contextRef.current)
+      )
+        hit = true;
+      else if (s.type === "Pencil" && checkNearPencil(x, y, s)) hit = true;
+      if (hit) {
+        setShapes((prev) => prev.filter((item) => item.id !== s.id));
+        break;
+      }
+    }
+  };
+
   const handlePointerDown = (e: PointerEvent) => {
     const { offsetX: x, offsetY: y } = e;
+
     if (isShapeSelect.current) {
       for (let i = shapes.length - 1; i >= 0; i--) {
         const s: Shape = shapes[i];
@@ -145,10 +170,23 @@ function App() {
             isDragging.current = true;
             return;
           }
+        } else if (s.type === "Pencil") {
+          if (checkNearPencil(x, y, s)) {
+            setSelectedShapeId(s.id);
+            dragStartX.current = x;
+            dragStartY.current = y;
+            isDragging.current = true;
+            return;
+          }
         }
       }
       setSelectedShapeId(null);
 
+      return;
+    }
+    if (isShape.current === "Eraser") {
+      eraseAt(x, y);
+      isDrawing.current = true;
       return;
     }
 
@@ -205,7 +243,10 @@ function App() {
                 endY: s.endY + deltaY,
               };
             } else if (s.type === "Pencil") {
-              return s;
+              return {
+                ...s,
+                points: s.points.map((s) => [s[0] + deltaX, s[1] + deltaY]),
+              };
             } else {
               return { ...s, x: s.x + deltaX, y: s.y + deltaY };
             }
@@ -286,6 +327,10 @@ function App() {
         stroke: "white",
         strokeWidth: 2,
       });
+    } else if (isShape.current === "Eraser" && isDrawing.current) {
+      const { offsetX: x, offsetY: y } = e;
+      eraseAt(x, y);
+      return;
     }
   };
 
@@ -362,6 +407,8 @@ function App() {
         points: currentPath.current,
       };
     } else if (isShape.current === "Text") {
+      return;
+    } else if (isShape.current === "Eraser") {
       return;
     }
 
@@ -505,6 +552,16 @@ function App() {
           className={`${isSelect ? "bg-green-500" : "bg-gray-500"} text-white`}
         >
           Select
+        </button>
+        <button
+          onClick={() => {
+            isShape.current = "Eraser";
+            setSelect(false);
+            isShapeSelect.current = false;
+          }}
+          className="bg-gray-500 text-white"
+        >
+          Eraser
         </button>
       </div>
       <canvas

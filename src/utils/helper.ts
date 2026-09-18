@@ -1,4 +1,4 @@
-import type { Circle, Ellipse, Line, Rectangle, Shape, Text } from "./types";
+import type { Circle, Ellipse, Line, Pencil, Rectangle, Shape, Text } from "./types";
 
 export const checkInsideRectangle = (
   offsetX: number,
@@ -76,6 +76,35 @@ export const checkNearText = (
   );
 };
 
+export const checkNearPencil = (
+  offsetX: number,
+  offsetY: number,
+  s: Pencil,
+): boolean => {
+  const points = s.points;
+  if (points.length < 2) return false;
+  for (let i = 0; i < points.length - 1; i++) {
+    const [x1, y1] = points[i];
+    const [x2, y2] = points[i + 1];
+    const num = Math.abs(
+      (y2 - y1) * offsetX - (x2 - x1) * offsetY + x2 * y1 - y2 * x1,
+    );
+    const den = Math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2);
+    if (den === 0) continue;
+    const distance = num / den;
+    if (
+      distance <= 10 &&
+      offsetX >= Math.min(x1, x2) - 10 &&
+      offsetX <= Math.max(x1, x2) + 10 &&
+      offsetY >= Math.min(y1, y2) - 10 &&
+      offsetY <= Math.max(y1, y2) + 10
+    ) {
+      return true;
+    }
+  }
+  return false;
+};
+
 export const drawSelectBorder = (ctx: CanvasRenderingContext2D, s: Shape) => {
   if (!ctx) return;
   ctx.save();
@@ -116,6 +145,14 @@ export const drawSelectBorder = (ctx: CanvasRenderingContext2D, s: Shape) => {
     const width = ctx.measureText(s.text).width;
 
     ctx.strokeRect(s.x, s.y, width, height);
+  } else if (s.type === "Pencil") {
+    const xs = s.points.map((p) => p[0]);
+    const ys = s.points.map((p) => p[1]);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    ctx.strokeRect(minX - 8, minY - 8, maxX - minX + 16, maxY - minY + 16);
   }
 
   ctx.restore();
