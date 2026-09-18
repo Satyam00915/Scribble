@@ -1,5 +1,12 @@
 import type { RoughCanvas } from "roughjs/bin/canvas";
-import type { Circle, Ellipse, Line, Pencil, Rectangle } from "./types.ts";
+import type {
+  Circle,
+  Ellipse,
+  Line,
+  Pencil,
+  Rectangle,
+  Text,
+} from "./types.ts";
 
 export const drawRectangle = (props: Rectangle, rc: RoughCanvas) => {
   rc.rectangle(props.x, props.y, props.width, props.height, {
@@ -34,3 +41,11 @@ export const drawRough = (props: Pencil, rc: RoughCanvas) => [
     stroke: "white",
   }),
 ];
+
+export const drawText = (props: Text, ctx: CanvasRenderingContext2D) => {
+  if (!ctx) return;
+  ctx.font = '28px "Caveat"';
+  ctx.fillStyle = "white";
+  ctx.textBaseline = "top";
+  ctx.fillText(props.text, props.x, props.y);
+};

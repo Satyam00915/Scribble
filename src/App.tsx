@@ -5,15 +5,17 @@ import {
   drawLine,
   drawRectangle,
   drawRough,
+  drawText,
 } from "./utils/drawFunctions";
 import {
   checkInsideCircle,
   checkInsideEllipse,
   checkInsideRectangle,
   checkNearLine,
+  checkNearText,
   drawSelectBorder,
 } from "./utils/helper";
-import type { Shape, Shapes } from "./utils/types";
+import type { Shape, Shapes, Text } from "./utils/types";
 import rough from "roughjs";
 import type { RoughCanvas } from "roughjs/bin/canvas";
 
@@ -32,8 +34,14 @@ function App() {
 
   const isDrawing = useRef(false);
   const isShape = useRef<
-    "Rectangle" | "Ellipse" | "Circle" | "Line" | "Pencil"
+    "Rectangle" | "Ellipse" | "Circle" | "Line" | "Pencil" | "Text"
   >("Rectangle");
+
+  const [writing, setWriting] = useState<{
+    x: number;
+    y: number;
+    text: string;
+  } | null>(null);
 
   const [isSelect, setSelect] = useState(false);
   const isShapeSelect = useRef<boolean>(false);
@@ -43,6 +51,24 @@ function App() {
   const [redo, setRedo] = useState<Shapes>([]);
 
   const currentPath = useRef<[x: number, y: number][]>([]);
+
+  const handleBlur = () => {
+    if (!writing) return;
+
+    if (writing.text.trim() !== "") {
+      const newShape: Text = {
+        id: Date.now().toString(),
+        type: "Text",
+        text: writing.text,
+        x: writing.x,
+        y: writing.y,
+      };
+
+      setShapes((prev) => [...prev, newShape]);
+    }
+
+    setWriting(null);
+  };
 
   console.log(shapes);
   function DrawShapes(
@@ -62,6 +88,9 @@ function App() {
         drawLine(s, roughRef.current);
       } else if (s.type === "Pencil") {
         drawRough(s, roughRef.current);
+      } else if (s.type === "Text") {
+        console.log("Drawing..text");
+        drawText(s, ctx.current);
       }
 
       if (s.id === selectedShapeId && isShapeSelect.current) {
@@ -107,10 +136,29 @@ function App() {
             isDragging.current = true;
             return;
           }
+        } else if (s.type === "Text" && contextRef.current) {
+          if (checkNearText(x, y, s, contextRef.current)) {
+            setSelectedShapeId(s.id);
+            dragStartX.current = x;
+            dragStartY.current = y;
+            isDragging.current = true;
+            return;
+          }
         }
       }
       setSelectedShapeId(null);
 
+      return;
+    }
+
+    if (isShape.current === "Text") {
+      const { offsetX: x, offsetY: y } = e;
+
+      setWriting({
+        x,
+        y,
+        text: "",
+      });
       return;
     }
 
@@ -297,7 +345,10 @@ function App() {
         type: "Pencil",
         points: currentPath.current,
       };
+    } else if (isShape.current === "Text") {
+      return;
     }
+
     setShapes((prev) => [...prev, newShape]);
     setRedo([]);
   };
@@ -390,6 +441,16 @@ function App() {
           Pencil
         </button>
         <button
+          onClick={() => {
+            isShape.current = "Text";
+            setSelect(false);
+            isShapeSelect.current = false;
+          }}
+          className="bg-gray-500 text-white"
+        >
+          Text
+        </button>
+        <button
           disabled={shapes.length === 0}
           onClick={() => {
             setSelectedShapeId(null);
@@ -428,6 +489,30 @@ function App() {
         height={window.innerHeight}
         className="block bg-[#000000]"
       />
+      {writing && (
+        <>
+          <input
+            autoFocus
+            value={writing.text}
+            onChange={(e) =>
+              setWriting((prev) =>
+                prev ? { ...prev, text: e.target.value } : null,
+              )
+            }
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleBlur();
+              }
+            }}
+            style={{
+              left: writing.x,
+              top: writing.y,
+              fontFamily: "Caveat",
+            }}
+            className="absolute bg-transparent text-white border border-dashed border-[#666] outline-0 text-[28px]"
+          />
+        </>
+      )}
     </div>
   );
 }

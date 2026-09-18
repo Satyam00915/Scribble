@@ -1,4 +1,4 @@
-export type Shape = Rectangle | Ellipse | Circle | Line | Pencil;
+export type Shape = Rectangle | Ellipse | Circle | Line | Pencil | Text;
 
 export type Rectangle = {
   id: string;
@@ -45,6 +45,14 @@ export type Pencil = {
   id: string;
   type: "Pencil";
   points: [x: number, y: number][];
+};
+
+export type Text = {
+  id: string;
+  type: "Text";
+  text: string;
+  x: number;
+  y: number;
 };
 
 export type Shapes = Shape[];

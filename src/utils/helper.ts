@@ -1,4 +1,4 @@
-import type { Circle, Ellipse, Line, Rectangle, Shape } from "./types";
+import type { Circle, Ellipse, Line, Rectangle, Shape, Text } from "./types";
 
 export const checkInsideRectangle = (
   offsetX: number,
@@ -60,6 +60,22 @@ export const checkNearLine = (offsetX: number, offsetY: number, s: Line) => {
   return distance < 8;
 };
 
+export const checkNearText = (
+  offsetX: number,
+  offsetY: number,
+  s: Text,
+  ctx: CanvasRenderingContext2D,
+) => {
+  const height = 28;
+  const width = ctx.measureText(s.text).width;
+  return (
+    offsetX >= s.x &&
+    offsetX <= s.x + width &&
+    offsetY >= s.y &&
+    offsetY <= s.y + height
+  );
+};
+
 export const drawSelectBorder = (ctx: CanvasRenderingContext2D, s: Shape) => {
   if (!ctx) return;
   ctx.save();
@@ -95,6 +111,11 @@ export const drawSelectBorder = (ctx: CanvasRenderingContext2D, s: Shape) => {
       Math.abs(s.endX - s.x + 16),
       Math.abs(s.endY - s.y + 16),
     );
+  } else if (s.type === "Text") {
+    const height = 28;
+    const width = ctx.measureText(s.text).width;
+
+    ctx.strokeRect(s.x, s.y, width, height);
   }
 
   ctx.restore();
