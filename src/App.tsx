@@ -23,6 +23,7 @@ function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const contextRef = useRef<CanvasRenderingContext2D>(null);
   const roughRef = useRef<RoughCanvas>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const startX = useRef(0);
   const startY = useRef(0);
@@ -154,6 +155,21 @@ function App() {
     if (isShape.current === "Text") {
       const { offsetX: x, offsetY: y } = e;
 
+      if (inputRef.current && inputRef.current.value.trim() !== "") {
+        // Commit the previous text!
+        const textVal = inputRef.current.value.trim();
+        // We get previous coordinates from inputRef's style or from writing state:
+        const prevX = parseInt(inputRef.current.style.left) || 0;
+        const prevY = parseInt(inputRef.current.style.top) || 0;
+        const newShape: Text = {
+          id: Date.now().toString(),
+          type: "Text",
+          text: textVal,
+          x: prevX,
+          y: prevY,
+        };
+        setShapes((prev) => [...prev, newShape]);
+      }
       setWriting({
         x,
         y,
@@ -395,6 +411,7 @@ function App() {
             isShape.current = "Rectangle";
             setSelect(false);
             isShapeSelect.current = false;
+            setWriting(null);
           }}
           className="bg-gray-500 text-white"
         >
@@ -404,6 +421,7 @@ function App() {
           onClick={() => {
             isShape.current = "Ellipse";
             setSelect(false);
+            setWriting(null);
             isShapeSelect.current = false;
           }}
           className="bg-gray-500 text-white"
@@ -414,6 +432,7 @@ function App() {
           onClick={() => {
             isShape.current = "Circle";
             setSelect(false);
+            setWriting(null);
             isShapeSelect.current = false;
           }}
           className="bg-gray-500 text-white"
@@ -424,6 +443,7 @@ function App() {
           onClick={() => {
             isShape.current = "Line";
             setSelect(false);
+            setWriting(null);
             isShapeSelect.current = false;
           }}
           className="bg-gray-500 text-white"
@@ -434,6 +454,7 @@ function App() {
           onClick={() => {
             isShape.current = "Pencil";
             setSelect(false);
+            setWriting(null);
             isShapeSelect.current = false;
           }}
           className="bg-gray-500 text-white"
@@ -456,6 +477,7 @@ function App() {
             setSelectedShapeId(null);
             const oldShape: Shape = shapes[shapes.length - 1];
             setShapes((prev) => prev.slice(0, -1));
+            setWriting(null);
             setRedo((prev) => [...prev, oldShape]);
           }}
           className="bg-gray-500 text-white"
@@ -467,6 +489,7 @@ function App() {
           onClick={() => {
             const oldShape: Shape = redo[redo.length - 1];
             setShapes((prev) => [...prev, oldShape]);
+            setWriting(null);
             setRedo((prev) => prev.slice(0, -1));
           }}
           className="bg-gray-500 text-white"
@@ -477,6 +500,7 @@ function App() {
           onClick={() => {
             setSelect(true);
             isShapeSelect.current = true;
+            setWriting(null);
           }}
           className={`${isSelect ? "bg-green-500" : "bg-gray-500"} text-white`}
         >
@@ -492,6 +516,7 @@ function App() {
       {writing && (
         <>
           <input
+            ref={inputRef}
             autoFocus
             value={writing.text}
             onChange={(e) =>
