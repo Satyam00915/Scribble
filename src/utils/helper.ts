@@ -1,4 +1,4 @@
-import type { Circle, Ellipse, Rectangle, Shape } from "./types";
+import type { Circle, Ellipse, Line, Rectangle, Shape } from "./types";
 
 export const checkInsideRectangle = (
   offsetX: number,
@@ -48,6 +48,18 @@ export const checkInsideEllipse = (
   }
 };
 
+export const checkNearLine = (offsetX: number, offsetY: number, s: Line) => {
+  const num = Math.abs(
+    (s.endY - s.y) * offsetX -
+      (s.endX - s.x) * offsetY +
+      s.endX * s.y -
+      s.endY * s.x,
+  );
+  const den = Math.sqrt((s.endY - s.y) ** 2 + (s.endX - s.x) ** 2);
+  const distance = num / den;
+  return distance < 8;
+};
+
 export const drawSelectBorder = (ctx: CanvasRenderingContext2D, s: Shape) => {
   if (!ctx) return;
   ctx.save();
@@ -75,6 +87,13 @@ export const drawSelectBorder = (ctx: CanvasRenderingContext2D, s: Shape) => {
       s.y - s.radiusY - 8,
       2 * s.radiusX + 16,
       2 * s.radiusY + 16,
+    );
+  } else if (s.type === "Line") {
+    ctx.strokeRect(
+      Math.min(s.endX, s.x - 8),
+      Math.min(s.endY, s.y - 8),
+      Math.abs(s.endX - s.x + 16),
+      Math.abs(s.endY - s.y + 16),
     );
   }
 

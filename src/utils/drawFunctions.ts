@@ -1,4 +1,4 @@
-import type { Circle, Ellipse, Rectangle } from "./types.ts";
+import type { Circle, Ellipse, Line, Rectangle } from "./types.ts";
 
 export const drawRectangle = (
   props: Rectangle,
@@ -42,4 +42,14 @@ export const drawCircle = (
     props.endAngle,
   );
   ctx.current.stroke();
+};
+
+export const drawLine = (
+  props: Line,
+  ctx: React.RefObject<CanvasRenderingContext2D | null>,
+) => {
+  ctx.current?.beginPath();
+  ctx.current?.moveTo(props.x, props.y);
+  ctx.current?.lineTo(props.endX, props.endY);
+  ctx.current?.stroke();
 };

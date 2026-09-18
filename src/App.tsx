@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { drawCircle, drawEllipse, drawRectangle } from "./utils/drawFunctions";
+import {
+  drawCircle,
+  drawEllipse,
+  drawLine,
+  drawRectangle,
+} from "./utils/drawFunctions";
 import {
   checkInsideCircle,
   checkInsideEllipse,
   checkInsideRectangle,
+  checkNearLine,
   drawSelectBorder,
 } from "./utils/helper";
 import type { Shape, Shapes } from "./utils/types";
@@ -15,8 +21,15 @@ function App() {
   const startX = useRef(0);
   const startY = useRef(0);
 
+  const dragStartX = useRef(0);
+  const dragStartY = useRef(0);
+
+  const isDragging = useRef(false);
+
   const isDrawing = useRef(false);
-  const isShape = useRef<"Rectangle" | "Ellipse" | "Circle">("Rectangle");
+  const isShape = useRef<"Rectangle" | "Ellipse" | "Circle" | "Line">(
+    "Rectangle",
+  );
 
   const [isSelect, setSelect] = useState(false);
   const isShapeSelect = useRef<boolean>(false);
@@ -35,6 +48,8 @@ function App() {
         drawEllipse(s, ctx);
       } else if (s.type === "Circle") {
         drawCircle(s, ctx);
+      } else if (s.type === "Line") {
+        drawLine(s, ctx);
       }
 
       if (s.id === selectedShapeId && isShapeSelect.current) {
@@ -51,21 +66,39 @@ function App() {
         if (s.type === "Rectangle") {
           if (checkInsideRectangle(x, y, s)) {
             setSelectedShapeId(s.id);
+            dragStartX.current = x;
+            dragStartY.current = y;
+            isDragging.current = true;
             return;
           }
         } else if (s.type === "Circle") {
           if (checkInsideCircle(x, y, s)) {
             setSelectedShapeId(s.id);
+            dragStartX.current = x;
+            dragStartY.current = y;
+            isDragging.current = true;
             return;
           }
         } else if (s.type === "Ellipse") {
           if (checkInsideEllipse(x, y, s)) {
             setSelectedShapeId(s.id);
+            dragStartX.current = x;
+            dragStartY.current = y;
+            isDragging.current = true;
+            return;
+          }
+        } else if (s.type === "Line") {
+          if (checkNearLine(x, y, s)) {
+            setSelectedShapeId(s.id);
+            dragStartX.current = x;
+            dragStartY.current = y;
+            isDragging.current = true;
             return;
           }
         }
       }
       setSelectedShapeId(null);
+
       return;
     }
 
@@ -76,6 +109,35 @@ function App() {
   };
 
   const handlePointerMove = (e: PointerEvent) => {
+    if (isDragging.current) {
+      const { offsetX: x, offsetY: y } = e;
+      const deltaX = x - dragStartX.current;
+      const deltaY = y - dragStartY.current;
+
+      setShapes((prev) =>
+        prev.map((s) => {
+          if (s.id === selectedShapeId) {
+            if (s.type === "Line") {
+              return {
+                ...s,
+                x: s.x + deltaX,
+                y: s.y + deltaY,
+                endX: s.endX + deltaX,
+                endY: s.endY + deltaY,
+              };
+            } else {
+              return { ...s, x: s.x + deltaX, y: s.y + deltaY };
+            }
+          }
+          return s;
+        }),
+      );
+
+      dragStartX.current = x;
+      dragStartY.current = y;
+
+      return;
+    }
     if (isShapeSelect.current) return;
     if (!isDrawing.current) return;
     if (!canvasRef.current) return;
@@ -134,11 +196,21 @@ function App() {
         Math.PI * 2,
       );
       contextRef.current.stroke();
+    } else if (isShape.current === "Line") {
+      const { offsetX, offsetY } = e;
+
+      contextRef.current.beginPath();
+      contextRef.current.moveTo(startX.current, startY.current);
+      contextRef.current.lineTo(offsetX, offsetY);
+      contextRef.current.stroke();
     }
   };
 
   const handlePointerUp = (e: PointerEvent) => {
-    if (isShapeSelect.current) return;
+    if (isShapeSelect.current) {
+      isDragging.current = false;
+      return;
+    }
     isDrawing.current = false;
 
     const currentX = e.offsetX;
@@ -188,6 +260,17 @@ function App() {
         radius,
         startAngle: 0,
         endAngle: Math.PI * 2,
+      };
+    } else if (isShape.current === "Line") {
+      const { offsetX, offsetY } = e;
+
+      newShape = {
+        id: Date.now().toString(),
+        type: "Line",
+        x: startX.current,
+        y: startY.current,
+        endX: offsetX,
+        endY: offsetY,
       };
     }
     setShapes((prev) => [...prev, newShape]);
@@ -254,6 +337,16 @@ function App() {
           className="bg-gray-500 text-white"
         >
           Circle
+        </button>
+        <button
+          onClick={() => {
+            isShape.current = "Line";
+            setSelect(false);
+            isShapeSelect.current = false;
+          }}
+          className="bg-gray-500 text-white"
+        >
+          Line
         </button>
         <button
           disabled={shapes.length === 0}

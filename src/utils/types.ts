@@ -1,4 +1,4 @@
-export type Shape = Rectangle | Ellipse | Circle;
+export type Shape = Rectangle | Ellipse | Circle | Line;
 
 export type Rectangle = {
   id: string;
@@ -30,6 +30,15 @@ export type Ellipse = {
   rotation: number;
   startAngle: number;
   endAngle: number;
+};
+
+export type Line = {
+  id: string;
+  type: "Line";
+  x: number;
+  y: number;
+  endX: number;
+  endY: number;
 };
 
 export type Shapes = Shape[];
