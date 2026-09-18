@@ -46,7 +46,14 @@ function App() {
   } | null>(null);
 
   const [activeTool, setActiveTool] = useState<
-    "Select" | "Rectangle" | "Ellipse" | "Circle" | "Line" | "Pencil" | "Text" | "Eraser"
+    | "Select"
+    | "Rectangle"
+    | "Ellipse"
+    | "Circle"
+    | "Line"
+    | "Pencil"
+    | "Text"
+    | "Eraser"
   >("Rectangle");
   const [isSelect, setSelect] = useState(false);
   const isShapeSelect = useRef<boolean>(false);
@@ -103,6 +110,20 @@ function App() {
       }
     });
   }
+
+  const exportToImage = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    setSelectedShapeId(null);
+
+    const imageURI = canvas.toDataURL("image/png");
+
+    const link = document.createElement("a");
+    link.download = "drawing.png";
+    link.href = imageURI;
+    link.click();
+  };
 
   const eraseAt = (x: number, y: number) => {
     for (let i = shapes.length - 1; i >= 0; i--) {
@@ -479,7 +500,15 @@ function App() {
                 : "text-zinc-600 cursor-not-allowed"
             }`}
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M3 7v6h6" />
               <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
             </svg>
@@ -501,7 +530,15 @@ function App() {
                 : "text-zinc-600 cursor-not-allowed"
             }`}
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M21 7v6h-6" />
               <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7" />
             </svg>
@@ -526,10 +563,20 @@ function App() {
                 : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
             }`}
           >
-            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="w-[18px] h-[18px]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M3 3l7 18 3-7 7-3L3 3z" />
             </svg>
-            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">1</span>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">
+              1
+            </span>
           </button>
 
           {/* Rectangle */}
@@ -549,10 +596,20 @@ function App() {
                 : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
             }`}
           >
-            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="w-[18px] h-[18px]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <rect x="3" y="3" width="18" height="18" rx="3" />
             </svg>
-            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">2</span>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">
+              2
+            </span>
           </button>
 
           {/* Circle */}
@@ -572,10 +629,20 @@ function App() {
                 : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
             }`}
           >
-            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="w-[18px] h-[18px]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <circle cx="12" cy="12" r="9" />
             </svg>
-            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">3</span>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">
+              3
+            </span>
           </button>
 
           {/* Ellipse */}
@@ -595,10 +662,20 @@ function App() {
                 : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
             }`}
           >
-            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="w-[18px] h-[18px]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <ellipse cx="12" cy="12" rx="10" ry="6" />
             </svg>
-            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">4</span>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">
+              4
+            </span>
           </button>
 
           {/* Line */}
@@ -618,10 +695,20 @@ function App() {
                 : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
             }`}
           >
-            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="w-[18px] h-[18px]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <line x1="5" y1="19" x2="19" y2="5" />
             </svg>
-            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">5</span>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">
+              5
+            </span>
           </button>
 
           {/* Pencil */}
@@ -641,10 +728,20 @@ function App() {
                 : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
             }`}
           >
-            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="w-[18px] h-[18px]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
             </svg>
-            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">6</span>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">
+              6
+            </span>
           </button>
 
           {/* Text */}
@@ -663,12 +760,22 @@ function App() {
                 : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
             }`}
           >
-            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="w-[18px] h-[18px]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polyline points="4 7 4 4 20 4 20 7" />
               <line x1="9" y1="20" x2="15" y2="20" />
               <line x1="12" y1="4" x2="12" y2="20" />
             </svg>
-            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">7</span>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">
+              7
+            </span>
           </button>
 
           {/* Eraser */}
@@ -687,12 +794,46 @@ function App() {
                 : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
             }`}
           >
-            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="w-[18px] h-[18px]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21" />
               <path d="M22 21H7" />
               <path d="m5 11 9 9" />
             </svg>
-            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">0</span>
+            <span className="absolute -bottom-0.5 right-1 text-[9px] font-medium opacity-40 group-hover:opacity-70">
+              0
+            </span>
+          </button>
+        </div>
+
+        {/* Export Section */}
+        <div className="flex items-center pl-1.5 border-l border-white/10">
+          <button
+            type="button"
+            onClick={exportToImage}
+            title="Export to Image (PNG)"
+            className="w-10 h-10 rounded-xl transition-all duration-150 flex items-center justify-center relative group cursor-pointer active:scale-95 text-zinc-300 hover:text-white hover:bg-white/10"
+          >
+            <svg
+              className="w-[18px] h-[18px]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
           </button>
         </div>
       </nav>
