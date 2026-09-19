@@ -58,6 +58,7 @@ function App() {
   const [isSelect, setSelect] = useState(false);
   const isShapeSelect = useRef<boolean>(false);
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
+  console.log(isSelect);
 
   const [shapes, setShapes] = useState<Shapes>([]);
   const [redo, setRedo] = useState<Shapes>([]);
