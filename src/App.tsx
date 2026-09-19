@@ -111,6 +111,26 @@ function App() {
     });
   }
 
+  const getCursor = () => {
+    switch (activeTool) {
+      case "Select":
+        return "default";
+      case "Eraser":
+        return `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7" fill="none" stroke="white" stroke-width="1.5"/></svg>') 9 9, auto`;
+      case "Pencil":
+        return `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="white" stroke="black" stroke-width="1"/></svg>') 4 4, crosshair`;
+      case "Text":
+        return "text";
+      case "Rectangle":
+      case "Circle":
+      case "Ellipse":
+      case "Line":
+        return "crosshair";
+      default:
+        return "default";
+    }
+  };
+
   const exportToImage = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -838,6 +858,9 @@ function App() {
         </div>
       </nav>
       <canvas
+        style={{
+          cursor: getCursor(),
+        }}
         ref={canvasRef}
         width={window.innerWidth}
         height={window.innerHeight}
