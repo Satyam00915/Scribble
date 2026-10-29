@@ -400,6 +400,8 @@ function App() {
   const handlePointerUp = (e: PointerEvent) => {
     if (isShapeSelect.current) {
       isDragging.current = false;
+      const movedShape = shapes.find((s) => s.id === selectedShapeId);
+      socket.emit("move_shape", { roomId, shape: movedShape });
       return;
     }
     isDrawing.current = false;
@@ -531,11 +533,15 @@ function App() {
     socket.on("erase", (shape: Shape) => {
       setShapes((prev) => prev.filter((item) => item.id !== shape.id));
     });
+    socket.on("update_shape", (shape: Shape) => {
+      setShapes((prev) => prev.map((s) => (s.id === shape.id ? shape : s)));
+    });
 
     return () => {
       socket.off("initial_shapes");
       socket.off("shape_drawn");
       socket.off("erase");
+      socket.off("update_shape");
     };
   }, [roomId]);
   if (!roomId) {

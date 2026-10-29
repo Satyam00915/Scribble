@@ -52,6 +52,15 @@ io.on("connection", (socket: Socket) => {
     socket.to(roomId).emit("erase", shape);
   });
 
+  socket.on("move_shape", ({ roomId, shape }) => {
+    if (roomShapes[roomId]) {
+      roomShapes[roomId] = roomShapes[roomId].map((s) =>
+        s.id === shape.id ? shape : s,
+      );
+    }
+    socket.to(roomId).emit("update_shape", shape);
+  });
+
   socket.on("disconnect", () => {
     console.log("User disconnected: ", socket.id);
   });
