@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { io } from "socket.io-client";
 import {
   drawCircle,
   drawEllipse,
@@ -19,12 +20,25 @@ import {
 import type { Shape, Shapes, Text } from "./utils/types";
 import rough from "roughjs";
 import type { RoughCanvas } from "roughjs/bin/canvas";
+import LobbyRoom from "./components/LobbyRoom";
+
+const socket = io("http://localhost:5000");
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const contextRef = useRef<CanvasRenderingContext2D>(null);
   const roughRef = useRef<RoughCanvas>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [roomId, setRoomId] = useState<string | null>(null);
+
+  const [copied, setCopied] = useState(false);
+
+  const copyRoomId = () => {
+    if (!roomId) return;
+    navigator.clipboard.writeText(roomId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const startX = useRef(0);
   const startY = useRef(0);
@@ -78,6 +92,7 @@ function App() {
       };
 
       setShapes((prev) => [...prev, newShape]);
+      socket.emit("draw_shape", { roomId, shape: newShape });
     }
 
     setWriting(null);
@@ -164,6 +179,7 @@ function App() {
       else if (s.type === "Pencil" && checkNearPencil(x, y, s)) hit = true;
       if (hit) {
         setShapes((prev) => prev.filter((item) => item.id !== s.id));
+        socket.emit("erase_shape", { roomId, shape: s });
         break;
       }
     }
@@ -252,6 +268,8 @@ function App() {
           y: prevY,
         };
         setShapes((prev) => [...prev, newShape]);
+        console.log(newShape);
+        socket.emit("draw_shape", { roomId, shape: newShape });
       }
       setWriting({
         x,
@@ -459,6 +477,11 @@ function App() {
 
     setShapes((prev) => [...prev, newShape]);
     setRedo([]);
+
+    if (newShape && roomId) {
+      console.log(newShape);
+      socket.emit("draw_shape", { roomId, shape: newShape });
+    }
   };
 
   useEffect(() => {
@@ -493,10 +516,75 @@ function App() {
         canvas.removeEventListener("pointerup", handlePointerUp);
       }
     };
-  }, [shapes, selectedShapeId]);
+  }, [shapes, selectedShapeId, roomId]);
+  useEffect(() => {
+    if (!roomId) return;
 
+    //Tell Server what room you want to join
+    socket.emit("join_room", roomId);
+    socket.on("initial_shapes", (loadedShapes: Shape[]) => {
+      setShapes(loadedShapes);
+    });
+    socket.on("shape_drawn", (shape: Shape) => {
+      console.log(shape);
+      setShapes((prev) => [...prev, shape]);
+    });
+    socket.on("erase", (shape: Shape) => {
+      setShapes((prev) => prev.filter((item) => item.id !== shape.id));
+    });
+
+    return () => {
+      socket.off("initial_shapes");
+      socket.off("shape_drawn");
+      socket.off("erase");
+    };
+  }, [roomId]);
+  if (!roomId) {
+    return <LobbyRoom onJoin={(roomId) => setRoomId(roomId)} />;
+  }
   return (
     <div className="relative">
+      {/* Top Left Room Badge */}
+      <div className="fixed top-4 left-4 z-40 flex items-center gap-2.5 px-3 py-1.5 bg-[#121212]/90 backdrop-blur-xl border border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.45)] rounded-2xl select-none text-xs">
+        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <span className="text-zinc-400 font-medium">Room:</span>
+        <span className="text-white font-mono font-bold tracking-wider">
+          {roomId}
+        </span>
+        <button
+          onClick={copyRoomId}
+          title="Copy Room ID"
+          className="ml-1 p-1 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition-all cursor-pointer flex items-center justify-center active:scale-95"
+        >
+          {copied ? (
+            <svg
+              className="w-3.5 h-3.5 text-emerald-400"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          ) : (
+            <svg
+              className="w-3.5 h-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          )}
+        </button>
+      </div>
+
       {/* Real Excalidraw Floating Island Toolbar */}
       <nav
         aria-label="Canvas Toolbar"
