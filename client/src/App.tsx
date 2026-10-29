@@ -22,7 +22,7 @@ import rough from "roughjs";
 import type { RoughCanvas } from "roughjs/bin/canvas";
 import LobbyRoom from "./components/LobbyRoom";
 
-const socket = io("http://localhost:5000");
+const socket = io("https://scribble-aja9.onrender.com");
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
