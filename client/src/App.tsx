@@ -410,7 +410,7 @@ function App() {
     const width = currentX - startX.current;
     const height = currentY - startY.current;
 
-    let newShape: Shape;
+    let newShape: Shape | null = null;
 
     if (isShape.current === "Rectangle") {
       newShape = {
@@ -475,11 +475,10 @@ function App() {
       return;
     }
 
-    setShapes((prev) => [...prev, newShape]);
-    setRedo([]);
-
     if (newShape && roomId) {
       console.log(newShape);
+      setShapes((prev) => [...prev, newShape]);
+      setRedo([]);
       socket.emit("draw_shape", { roomId, shape: newShape });
     }
   };
