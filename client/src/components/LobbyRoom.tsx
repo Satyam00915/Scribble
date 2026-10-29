@@ -1,15 +1,21 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 interface LobbyRoomProps {
-  onJoin: (id: string) => void;
+  onJoin: (id: string, name: string) => void;
 }
 
 const LobbyRoom = ({ onJoin }: LobbyRoomProps) => {
   const [joinId, setJoinId] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
 
   const handleCreateRoom = () => {
     const roomId = Math.random().toString(36).substring(2, 8);
-    onJoin(roomId);
+    if (!username) {
+      toast.error("Enter username");
+      return;
+    }
+    onJoin(roomId, username);
   };
 
   return (
@@ -42,6 +48,17 @@ const LobbyRoom = ({ onJoin }: LobbyRoomProps) => {
           <p className="text-sm text-zinc-400">
             Realtime collaborative canvas with hand-drawn vibes.
           </p>
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            placeholder="Enter Username"
+            className="w-full py-3 px-4 bg-[#232329]/80 border border-white/10 rounded-2xl text-white placeholder-zinc-500 focus:outline-none focus:border-[#6965db] focus:ring-2 focus:ring-[#6965db]/20 transition-all font-mono text-sm"
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <div className="flex-1 h-px bg-white/10" />
         </div>
 
         {/* Create Room Button */}
@@ -82,8 +99,14 @@ const LobbyRoom = ({ onJoin }: LobbyRoomProps) => {
               value={joinId ?? ""}
               onChange={(e) => setJoinId(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && joinId && joinId.trim() !== "") {
-                  onJoin(joinId.trim());
+                if (
+                  e.key === "Enter" &&
+                  joinId &&
+                  joinId.trim() !== "" &&
+                  username &&
+                  username.trim() !== ""
+                ) {
+                  onJoin(joinId.trim(), username.trim());
                 }
               }}
               className="w-full py-3 px-4 bg-[#232329]/80 border border-white/10 rounded-2xl text-white placeholder-zinc-500 focus:outline-none focus:border-[#6965db] focus:ring-2 focus:ring-[#6965db]/20 transition-all font-mono text-sm"
@@ -92,8 +115,13 @@ const LobbyRoom = ({ onJoin }: LobbyRoomProps) => {
 
           <button
             onClick={() => {
-              if (joinId && joinId.trim() !== "") {
-                onJoin(joinId.trim());
+              if (
+                joinId &&
+                joinId.trim() !== "" &&
+                username &&
+                username.trim() !== ""
+              ) {
+                onJoin(joinId.trim(), username);
               }
             }}
             disabled={!joinId || joinId.trim() === ""}

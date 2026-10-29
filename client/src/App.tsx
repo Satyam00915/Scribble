@@ -21,8 +21,10 @@ import type { Shape, Shapes, Text } from "./utils/types";
 import rough from "roughjs";
 import type { RoughCanvas } from "roughjs/bin/canvas";
 import LobbyRoom from "./components/LobbyRoom";
+import toast from "react-hot-toast";
 
 const socket = io("https://scribble-aja9.onrender.com");
+// const socket = io("http://localhost:5000");
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -30,6 +32,7 @@ function App() {
   const roughRef = useRef<RoughCanvas>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
 
   const [copied, setCopied] = useState(false);
 
@@ -522,7 +525,13 @@ function App() {
     if (!roomId) return;
 
     //Tell Server what room you want to join
-    socket.emit("join_room", roomId);
+    socket.emit("join_room", {
+      roomId,
+      username,
+    });
+    socket.on("user_join", (msg) => {
+      toast.success(msg);
+    });
     socket.on("initial_shapes", (loadedShapes: Shape[]) => {
       setShapes(loadedShapes);
     });
@@ -545,7 +554,14 @@ function App() {
     };
   }, [roomId]);
   if (!roomId) {
-    return <LobbyRoom onJoin={(roomId) => setRoomId(roomId)} />;
+    return (
+      <LobbyRoom
+        onJoin={(roomId, username) => {
+          setRoomId(roomId);
+          setUsername(username);
+        }}
+      />
+    );
   }
   return (
     <div className="relative">

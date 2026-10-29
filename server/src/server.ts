@@ -21,11 +21,12 @@ const io = new Server(server, {
 io.on("connection", (socket: Socket) => {
   console.log("User connected: ", socket.id);
 
-  socket.on("join_room", (roomId: string) => {
+  socket.on("join_room", ({ roomId, username }) => {
     socket.join(roomId);
     if (!roomShapes[roomId]) {
       roomShapes[roomId] = [];
     }
+    socket.to(roomId).emit("user_join", `${username} joined`);
     console.log(`Socket ID: ${socket.id} joined room id ${roomId}`);
     socket.emit("initial_shapes", roomShapes[roomId]);
   });
@@ -53,6 +54,7 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("move_shape", ({ roomId, shape }) => {
+    console.log("Shape moved: ", shape);
     if (roomShapes[roomId]) {
       roomShapes[roomId] = roomShapes[roomId].map((s) =>
         s.id === shape.id ? shape : s,
