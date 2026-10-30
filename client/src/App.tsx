@@ -404,6 +404,7 @@ function App() {
     if (isShapeSelect.current) {
       isDragging.current = false;
       const movedShape = shapes.find((s) => s.id === selectedShapeId);
+      if (!movedShape) return;
       socket.emit("move_shape", { roomId, shape: movedShape });
       return;
     }
