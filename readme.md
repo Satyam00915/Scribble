@@ -24,7 +24,7 @@ Scribble is a real-time collaborative whiteboard application that allows multipl
 Clone the repository:
 
 ```bash
-git clone <your-repository-url>
+git clone git@github.com:Satyam00915/Scribble.git
 cd Scribble
 ```
 
