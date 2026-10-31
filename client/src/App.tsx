@@ -24,7 +24,7 @@ import LobbyRoom from "./components/LobbyRoom";
 import toast from "react-hot-toast";
 
 const socket = io("https://scribble-aja9.onrender.com");
-//const socket = io("http://localhost:5000");
+// const socket = io("http://localhost:5000");
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);

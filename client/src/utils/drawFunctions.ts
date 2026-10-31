@@ -11,14 +11,14 @@ import type {
 export const drawRectangle = (props: Rectangle, rc: RoughCanvas) => {
   rc.rectangle(props.x, props.y, props.width, props.height, {
     stroke: "white",
-    roughness: 2.8,
+    roughness: 1,
   });
 };
 
 export const drawEllipse = (props: Ellipse, rc: RoughCanvas) => {
   rc.ellipse(props.x, props.y, 2 * props.radiusX, 2 * props.radiusY, {
     stroke: "white",
-    roughness: 2,
+    roughness: 1,
   });
 };
 
@@ -32,7 +32,7 @@ export const drawCircle = (props: Circle, rc: RoughCanvas) => {
 export const drawLine = (props: Line, rc: RoughCanvas) => {
   rc.line(props.x, props.y, props.endX, props.endY, {
     stroke: "white",
-    roughness: 1.5,
+    roughness: 1,
   });
 };
 

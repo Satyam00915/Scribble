@@ -1,4 +1,12 @@
-import type { Circle, Ellipse, Line, Pencil, Rectangle, Shape, Text } from "./types";
+import type {
+  Circle,
+  Ellipse,
+  Line,
+  Pencil,
+  Rectangle,
+  Shape,
+  Text,
+} from "./types";
 
 export const checkInsideRectangle = (
   offsetX: number,
@@ -48,16 +56,49 @@ export const checkInsideEllipse = (
   }
 };
 
-export const checkNearLine = (offsetX: number, offsetY: number, s: Line) => {
-  const num = Math.abs(
-    (s.endY - s.y) * offsetX -
-      (s.endX - s.x) * offsetY +
-      s.endX * s.y -
-      s.endY * s.x,
-  );
-  const den = Math.sqrt((s.endY - s.y) ** 2 + (s.endX - s.x) ** 2);
-  const distance = num / den;
-  return distance < 8;
+// export const checkNearLine = (offsetX: number, offsetY: number, s: Line) => {
+//   const num = Math.abs(
+//     (s.endY - s.y) * offsetX -
+//       (s.endX - s.x) * offsetY +
+//       s.endX * s.y -
+//       s.endY * s.x,
+//   );
+//   const den = Math.sqrt((s.endY - s.y) ** 2 + (s.endX - s.x) ** 2);
+//   const distance = num / den;
+//   return distance < 8;
+// };
+
+export const checkNearLine = (
+  offsetX: number,
+  offsetY: number,
+  s: Line,
+): boolean => {
+  const { x, y, endX, endY } = s;
+
+  const dx = endX - x;
+  const dy = endY - y;
+
+  const lengthSquared = dx * dx + dy * dy;
+
+  // Handle zero-length lines
+  if (lengthSquared === 0) {
+    return Math.hypot(offsetX - x, offsetY - y) <= 8;
+  }
+
+  // Calculate projection of pointer onto the line
+  let t = ((offsetX - x) * dx + (offsetY - y) * dy) / lengthSquared;
+
+  // Restrict projection to the actual line segment
+  t = Math.max(0, Math.min(1, t));
+
+  // Find closest point on the segment
+  const closestX = x + t * dx;
+  const closestY = y + t * dy;
+
+  // Calculate actual distance from pointer to segment
+  const distance = Math.hypot(offsetX - closestX, offsetY - closestY);
+
+  return distance <= 8;
 };
 
 export const checkNearText = (
