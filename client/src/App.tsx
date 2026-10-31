@@ -23,8 +23,8 @@ import type { RoughCanvas } from "roughjs/bin/canvas";
 import LobbyRoom from "./components/LobbyRoom";
 import toast from "react-hot-toast";
 
-const socket = io("https://scribble-aja9.onrender.com");
-// const socket = io("http://localhost:5000");
+// const socket = io("https://scribble-aja9.onrender.com");
+const socket = io("http://localhost:5000");
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -539,6 +539,7 @@ function App() {
     socket.on("shape_drawn", (shape: Shape) => {
       console.log(shape);
       setShapes((prev) => [...prev, shape]);
+      setRedo([]);
     });
     socket.on("erase", (shape: Shape) => {
       setShapes((prev) => prev.filter((item) => item.id !== shape.id));
@@ -546,12 +547,22 @@ function App() {
     socket.on("update_shape", (shape: Shape) => {
       setShapes((prev) => prev.map((s) => (s.id === shape.id ? shape : s)));
     });
+    socket.on("undo", (shape: Shape) => {
+      setShapes((prev) => prev.filter((item) => item.id !== shape.id));
+      setRedo((prev) => [...prev, shape]);
+    });
+    socket.on("redo", (shape: Shape) => {
+      setShapes((prev) => [...prev, shape]);
+      setRedo((prev) => prev.filter((item) => item.id !== shape.id));
+    });
 
     return () => {
       socket.off("initial_shapes");
       socket.off("shape_drawn");
       socket.off("erase");
       socket.off("update_shape");
+      socket.off("undo");
+      socket.off("redo");
     };
   }, [roomId]);
   if (!roomId) {
@@ -620,6 +631,7 @@ function App() {
             onClick={() => {
               setSelectedShapeId(null);
               const oldShape: Shape = shapes[shapes.length - 1];
+              socket.emit("undo_shape", { roomId, shape: oldShape });
               setShapes((prev) => prev.slice(0, -1));
               setWriting(null);
               setRedo((prev) => [...prev, oldShape]);
@@ -650,6 +662,7 @@ function App() {
             disabled={redo.length === 0}
             onClick={() => {
               const oldShape: Shape = redo[redo.length - 1];
+              socket.emit("redo_shape", { roomId, shape: oldShape });
               setShapes((prev) => [...prev, oldShape]);
               setWriting(null);
               setRedo((prev) => prev.slice(0, -1));

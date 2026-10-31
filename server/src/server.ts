@@ -63,6 +63,20 @@ io.on("connection", (socket: Socket) => {
     socket.to(roomId).emit("update_shape", shape);
   });
 
+  socket.on("undo_shape", ({ roomId, shape }) => {
+    if (roomShapes[roomId]) {
+      roomShapes[roomId] = roomShapes[roomId].filter((s) => s.id !== shape.id);
+    }
+    socket.to(roomId).emit("undo", shape);
+  });
+
+  socket.on("redo_shape", ({ roomId, shape }) => {
+    if (roomShapes[roomId]) {
+      roomShapes[roomId].push(shape);
+    }
+    socket.to(roomId).emit("redo", shape);
+  });
+ 
   socket.on("disconnect", () => {
     console.log("User disconnected: ", socket.id);
   });
