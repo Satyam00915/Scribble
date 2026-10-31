@@ -28,7 +28,7 @@ io.on("connection", (socket: Socket) => {
     }
     socket.to(roomId).emit("user_join", `${username} joined`);
     console.log(`Socket ID: ${socket.id} joined room id ${roomId}`);
-    socket.emit("initial_shapes", roomShapes[roomId]);
+    socket.to(roomId).emit("initial_shapes", roomShapes[roomId]);
   });
 
   socket.on(
@@ -76,7 +76,7 @@ io.on("connection", (socket: Socket) => {
     }
     socket.to(roomId).emit("redo", shape);
   });
- 
+
   socket.on("disconnect", () => {
     console.log("User disconnected: ", socket.id);
   });
